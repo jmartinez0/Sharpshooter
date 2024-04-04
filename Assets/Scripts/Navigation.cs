@@ -43,6 +43,6 @@ public class Navigation : MonoBehaviour
 
     public void quit()
     {
-        // code to quit app
+        Application.Quit();
     }
 }
