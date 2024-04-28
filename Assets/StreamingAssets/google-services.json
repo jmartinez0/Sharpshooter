@@ -1,0 +1,30 @@
+{
+  "project_info": {
+    "project_number": "403771611947",
+    "firebase_url": "https://csc-sharpshooter-default-rtdb.firebaseio.com",
+    "project_id": "csc-sharpshooter",
+    "storage_bucket": "csc-sharpshooter.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:403771611947:android:b7cc3f99581c3f7e7a836e",
+        "android_client_info": {
+          "package_name": "com.DefaultCompany.AimTrainer"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCSprRGaQ8MXvvywyp6hhU_fV3YrMcgGjw"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
