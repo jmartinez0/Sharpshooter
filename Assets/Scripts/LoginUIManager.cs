@@ -7,6 +7,7 @@ using TMPro;
 using System.Threading.Tasks;
 using Firebase.Extensions;
 using UnityEngine.SceneManagement;
+using Firebase.Firestore;
 
 // Handles authentication actions and switching between log in and register screens
 public class LoginUIManager : MonoBehaviour
@@ -182,6 +183,37 @@ public class LoginUIManager : MonoBehaviour
             // Firebase user has been created.
             Firebase.Auth.AuthResult result = task.Result;
             Debug.LogFormat("Firebase user created successfully: {0} ({1})", result.User.DisplayName, result.User.UserId);
+
+            // Create a new document in Firestore under 'Users' collection with the email as the document ID
+            FirebaseFirestore db = FirebaseFirestore.DefaultInstance;
+            DocumentReference docRef = db.Collection("Users").Document(email);
+            Dictionary<string, object> user = new Dictionary<string, object>
+            {
+                { "email", email },
+                { "username", username },
+                { "total_score", 0 },
+                { "overall_accuracy", 0.0 },
+                { "total_shots", 0 },
+                { "total_hits", 0 },
+                { "total_misses", 0 },
+                { "games_played", 0 },
+                { "sensitivity", 0.0 },
+                { "pistol_skin", "default"},
+            };
+            docRef.SetAsync(user).ContinueWithOnMainThread(task =>
+            {
+                if (task.IsFaulted)
+                {
+                    Debug.LogError("Error adding document: " + task.Exception);
+                    UpdateUIOnError("Error creating user profile, please try again.", errorRegisterText);
+                }
+                else
+                {
+                    Debug.Log("Document added successfully with ID: " + email);
+                    // Optionally, load the login screen on success or any other appropriate action
+                    ShowLogin();
+                }
+            });
 
             // Load the login screen on success
             Debug.Log("Showing login screen...");
