@@ -99,13 +99,26 @@ public class LoginUIManager : MonoBehaviour
         // Get user input
         string email = emailLoginField.text;
         string password = passwordLoginField.text;
-        auth.SignInWithEmailAndPasswordAsync(email, password).ContinueWith(task => {
-        if (task.IsCanceled) {
+
+        // Check if any of the input fields are empty
+        if (string.IsNullOrEmpty(email) || string.IsNullOrEmpty(password))
+        {
+            // Display error message for empty fields
+            UpdateUIOnError("All fields must be filled.", errorLoginText);
+            return;
+        }
+
+        auth.SignInWithEmailAndPasswordAsync(email, password).ContinueWithOnMainThread(task => {
+        if (task.IsCanceled)
+        {
             Debug.LogError("SignInWithEmailAndPasswordAsync was canceled.");
             return;
         }
-        if (task.IsFaulted) {
+        if (task.IsFaulted)
+        {
             Debug.LogError("SignInWithEmailAndPasswordAsync encountered an error: " + task.Exception);
+            // Display error message
+            UpdateUIOnError("Incorrect username or password.", errorLoginText);
             return;
         }
 
@@ -128,13 +141,12 @@ public class LoginUIManager : MonoBehaviour
         // Check if any of the input fields are empty
         if (string.IsNullOrEmpty(email) || string.IsNullOrEmpty(password) || string.IsNullOrEmpty(username))
         {
-            errorRegisterText.text = "All fields must be filled.";
-            errorRegisterText.enabled = true;
-            Debug.LogError("Fields cannot be empty.");
+            // Display error message
+            UpdateUIOnError("All fields must be filled.", errorRegisterText);
             return;
         }
 
-        auth.CreateUserWithEmailAndPasswordAsync(email, password).ContinueWith(task =>
+        auth.CreateUserWithEmailAndPasswordAsync(email, password).ContinueWithOnMainThread(task =>
         {
             if (task.IsCanceled)
             {
@@ -143,7 +155,27 @@ public class LoginUIManager : MonoBehaviour
             }
             if (task.IsFaulted)
             {
-                Debug.LogError("CreateUserWithEmailAndPasswordAsync encountered an error: " + task.Exception);
+                Firebase.FirebaseException firebaseEx = null;
+                // Loop to find the first Firebase exception,
+                // since there are multiple possible exceptions,
+                // like bad email formatting, weak password, etc.
+                foreach (var exception in task.Exception.Flatten().InnerExceptions)
+                {
+                    firebaseEx = exception as Firebase.FirebaseException;
+                    if (firebaseEx != null)
+                    {
+                        Debug.LogError("CreateUserWithEmailAndPasswordAsync encountered an error: " + firebaseEx.Message);
+                        break; // Exit loop after finding the first Firebase exception
+                    }
+                }
+                if (firebaseEx != null)
+                {
+                    HandleFirebaseAuthErrors(firebaseEx.ErrorCode, errorRegisterText);
+                }
+                else
+                {
+                    UpdateUIOnError("Failed to register. Please try again.", errorRegisterText);
+                }
                 return;
             }
 
@@ -165,6 +197,8 @@ public class LoginUIManager : MonoBehaviour
         emailRegisterField.text = "";
         passwordRegisterField.text = "";
         usernameRegisterField.text = "";
+        errorLoginText.text = "";
+        errorRegisterText.text = "";
     }
 
     // Pulls focus to first input field in a canvas, used when switching the canvas
@@ -174,6 +208,32 @@ public class LoginUIManager : MonoBehaviour
         inputField.ActivateInputField();
     }
 
+    // Updates the error text on screen. There are two separate errorText GameObjects.
+    private void UpdateUIOnError(string message, TMP_Text errorText)
+    {
+        errorText.text = message;
+        errorText.gameObject.SetActive(true);
+    }
 
+    // Handles Firebase Auth Errors based on the error code provided by Firebase,
+    // This is used for the register function to account for all possible registration errors.
+    private void HandleFirebaseAuthErrors(int errorCode, TMP_Text errorText)
+    {
+        switch (errorCode)
+        {
+            case (int)Firebase.Auth.AuthError.InvalidEmail:
+                UpdateUIOnError("Email must follow the format email@email.com.", errorText);
+                break;
+            case (int)Firebase.Auth.AuthError.EmailAlreadyInUse:
+                UpdateUIOnError("The email address is already in use by another account.", errorText);
+                break;
+            case (int)Firebase.Auth.AuthError.WeakPassword:
+                UpdateUIOnError("Passwords must be at least 6 characters long.", errorText);
+                break;
+            default:
+                UpdateUIOnError($"An error occurred: {errorCode}", errorText);
+                break;
+        }
+    }
 
 }
