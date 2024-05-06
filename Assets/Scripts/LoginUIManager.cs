@@ -192,6 +192,7 @@ public class LoginUIManager : MonoBehaviour
                 { "email", email },
                 { "username", username },
                 { "total_score", 0 },
+                { "high_score", 0},
                 { "overall_accuracy", 0.0 },
                 { "total_shots", 0 },
                 { "total_hits", 0 },
