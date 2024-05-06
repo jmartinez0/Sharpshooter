@@ -1,7 +1,6 @@
-using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
-using UnityEngine.UI;
+using Firebase.Auth;
+using UnityEngine.SceneManagement;
 
 public class Navigation : MonoBehaviour
 {
@@ -42,8 +41,12 @@ public class Navigation : MonoBehaviour
         settingsPanel.SetActive(true);
     }
 
-    public void quit()
+    public void logOut()
     {
-        Application.Quit();
+        // Log out the current user
+        FirebaseAuth.DefaultInstance.SignOut();
+
+        // Load the login scene
+        SceneManager.LoadScene("Login");
     }
 }
